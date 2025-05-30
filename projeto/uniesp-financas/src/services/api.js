@@ -2,7 +2,7 @@ import axios from "axios";
 import * as SecureStore from 'expo-secure-store';
 
 const api = axios.create({
-  baseURL: 'http://192.168.1.12:3333',
+  baseURL: 'http://192.168.1.12:3333', //ipv4:3333
 });
 
 // Interceptor para adicionar token às requisições

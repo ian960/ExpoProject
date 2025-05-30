@@ -1,8 +1,7 @@
-import React, { useState, useContext } from 'react';
+import React, { useState } from 'react';
 import { View, Text, TouchableOpacity, Alert, ActivityIndicator } from 'react-native';
 import styled from 'styled-components/native';
 import Icon from 'react-native-vector-icons/Feather';
-import DateTimePicker from '@react-native-community/datetimepicker';
 import Header from '../../components/Header';
 import { useNavigation } from '@react-navigation/native';
 import api from '../../services/api';
@@ -24,27 +23,39 @@ const Input = styled.TextInput`
   padding: 10px;
   border-radius: 5px;
   margin-bottom: 10px;
+  height: 50px;
+`;
+
+const SelectRow = styled.View`
+  flex-direction: row;
+  justify-content: space-between;
+  margin-bottom: 10px;
+  height: 50px;
 `;
 
 const SelectButton = styled.TouchableOpacity`
-  background-color: ${props => props.selected ? (props.type === 'receita' ? '#28A745' : '#DC3545') : '#FFFFFF'};
+  background-color: ${props => (props.selected ? '#FFFFFF' : '#F0F4FF')};
   padding: 10px;
   border-radius: 5px;
-  margin-bottom: 10px;
   align-items: center;
+  flex-direction: row;
+  justify-content: center;
+  flex: 1;
+  margin-right: ${props => props.marginRight || '0px'};
 `;
 
 const SelectText = styled.Text`
-  color: ${props => props.selected ? '#FFFFFF' : '#000000'};
+  color: #171717;
+  margin-left: 5px;
 `;
 
 const SaveButton = styled.TouchableOpacity`
-  background-color: #3B3DBF;
+  background-color:#00B94A;
   padding: 15px;
   border-radius: 5px;
   align-items: center;
   margin-top: 10px;
-  opacity: ${props => props.disabled ? 0.6 : 1};
+  opacity: ${props => (props.disabled ? 0.6 : 1)};
 `;
 
 const SaveText = styled.Text`
@@ -58,8 +69,6 @@ export default function Registrar() {
   const [value, setValue] = useState('');
   const [description, setDescription] = useState('');
   const [type, setType] = useState('receita');
-  const [date, setDate] = useState(new Date());
-  const [showDatePicker, setShowDatePicker] = useState(false);
   const [loading, setLoading] = useState(false);
 
   const handleSave = async () => {
@@ -67,53 +76,42 @@ export default function Registrar() {
       Alert.alert('Erro', 'Preencha o valor corretamente.');
       return;
     }
-    
+
     if (!description) {
       Alert.alert('Erro', 'Preencha a descrição.');
       return;
     }
-    
+
     setLoading(true);
-    
+
     try {
-      // Formatar data para DD/MM/YYYY
-      const day = date.getDate().toString().padStart(2, '0');
-      const month = (date.getMonth() + 1).toString().padStart(2, '0');
-      const year = date.getFullYear();
-      const formattedDate = `${day}/${month}/${year}`;
-      
       const movementData = {
         description,
         value: parseFloat(value),
         type,
-        date: formattedDate
+        date: new Date().toISOString(), // adicionando a data no formato ISO
       };
-      
+
       const response = await api.post('/receive', movementData);
-      
-      // Adiciona a nova movimentação ao contexto
+
       addMovement({
         ...response.data,
         ...movementData
       });
-      
+
       Alert.alert('Sucesso', 'Movimentação registrada com sucesso!');
-      
-      // Resetar campos
+
       setValue('');
       setDescription('');
       setType('receita');
-      setDate(new Date());
-      
-      // Navegar para Home
+
       navigation.reset({
         index: 0,
         routes: [{ name: 'Home' }]
       });
-      
     } catch (error) {
-      console.error('Erro completo:', error);
-      Alert.alert('Erro', 'Falha ao registrar movimentação');
+      console.error('Erro completo:', error.response ? error.response.data : error.message);
+      Alert.alert('Erro', error.response?.data?.message || 'Falha ao registrar movimentação');
     } finally {
       setLoading(false);
     }
@@ -131,68 +129,43 @@ export default function Registrar() {
             value={value}
             onChangeText={setValue}
           />
-          
+
           <Input
             placeholder="Descrição"
             value={description}
             onChangeText={setDescription}
           />
-          
-          <View style={{ flexDirection: 'row', justifyContent: 'space-around', marginBottom: 10 }}>
-            <SelectButton 
-              selected={type === 'receita'} 
-              type="receita" 
+
+          <SelectRow>
+            <SelectButton
+              selected={type === 'receita'}
+              type="receita"
+              marginRight="5px"
               onPress={() => setType('receita')}
             >
-              <SelectText selected={type === 'receita'}>Receita</SelectText>
+              <Icon name="arrow-up" size={16} color="#171717" />
+              <SelectText>Receita</SelectText>
             </SelectButton>
-            
-            <SelectButton 
-              selected={type === 'despesa'} 
-              type="despesa" 
+
+            <SelectButton
+              selected={type === 'despesa'}
+              type="despesa"
               onPress={() => setType('despesa')}
             >
-              <SelectText selected={type === 'despesa'}>Despesa</SelectText>
+              <Icon name="arrow-down" size={16} color="#171717" />
+              <SelectText>Despesa</SelectText>
             </SelectButton>
-          </View>
-          
-        <TouchableOpacity 
-          onPress={() => setShowDatePicker(true)}
-          style={{ 
-            backgroundColor: '#FFF', 
-            padding: 10, 
-            borderRadius: 5,
-            marginBottom: 10,
-            flexDirection: 'row',
-            justifyContent: 'space-between'
-          }}
-        >
-          <Text>Data: {date.toLocaleDateString('pt-BR')}</Text>
-          <Icon name="calendar" size={20} color="#000" />
-        </TouchableOpacity>
-        
-        {showDatePicker && (
-          <DateTimePicker
-            value={date}
-            mode="date"
-            display="default"
-            onChange={(event, selectedDate) => {
-              setShowDatePicker(false);
-              if (selectedDate) setDate(selectedDate);
-            }}
-          />
-        )}
-        
-        <SaveButton onPress={handleSave} disabled={loading}>
-          {loading ? (
-            <ActivityIndicator color="#FFF" />
-          ) : (
-            <SaveText>Salvar</SaveText>
-          )}
-        </SaveButton>
-      </Content>
-    </Container>
+          </SelectRow>
+
+          <SaveButton onPress={handleSave} disabled={loading}>
+            {loading ? (
+              <ActivityIndicator color="#FFF" />
+            ) : (
+              <SaveText>Registrar</SaveText>
+            )}
+          </SaveButton>
+        </Content>
+      </Container>
     </SafeArea>
   );
 }
-        

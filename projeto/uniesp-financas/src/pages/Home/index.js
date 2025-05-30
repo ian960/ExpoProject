@@ -11,9 +11,11 @@ import api from '../../services/api';
 import SafeArea from '../../components/SafeArea';
 
 const screenWidth = Dimensions.get('window').width;
+const screenHeight = Dimensions.get('window').height;
 const cardWidth = screenWidth * 0.7;
 const cardMargin = 10;
 const snapInterval = cardWidth + cardMargin;
+const cardHeight = screenHeight * 0.12;
 
 const Background = styled.View`
   flex: 1;
@@ -27,32 +29,37 @@ const Container = styled.View`
 
 const CarouselCard = styled.View`
   background-color: ${props => props.bgColor};
-  border-radius: 12px;
-  padding: 20px;
+  border-radius: 4px;
+  padding: 10px;
   margin-right: ${cardMargin}px;
   elevation: 3;
-  align-items: center;
-  justify-content: center;
+  align-items: flex-start;
+  justify-content: flex-end;
+
+
   width: ${cardWidth}px;
+  height: ${cardHeight}px;
 `;
 
 const CarouselTitle = styled.Text`
   font-size: 18px;
   font-weight: bold;
   color: #FFFFFF;
-  margin-top: 10px;
+  margin-top: 50px;
 `;
 
 const CarouselValue = styled.Text`
   font-size: 24px;
   color: #FFFFFF;
-  margin-top: 5px;
+  margin-top: 0px;
 `;
 
 const SectionTitle = styled.View`
-  flex-direction: row;
-  align-items: center;
-  margin: 20px 0 10px;
+  font-size: 18px;
+  font-weight: bold;
+  color: #FFFFFF;
+  margin-top: 0px;
+  justify-content: space-between;
 `;
 
 const SectionIcon = styled(Icon)`
@@ -191,19 +198,18 @@ export default function Home() {
       title: 'Saldo Atual',
       value: balance.saldo || 0,
       bgColor: '#3B3DBF',
-      icon: 'dollar-sign',
     },
     {
       title: 'Entradas de Hoje',
       value: balance.receita || 0,
       bgColor: '#00B94A',
-      icon: 'arrow-up',
+
     },
     {
       title: 'Saídas de Hoje',
       value: balance.despesa || 0,
       bgColor: '#EF463A',
-      icon: 'arrow-down',
+      
     },
   ];
 
@@ -216,14 +222,8 @@ export default function Home() {
       <Background>
         <Header title="Home" />
         <Container>
-          <FilterButton onPress={() => setShowDatePicker(true)}>
-            <Icon name="calendar" size={20} color="#000" />
-            <FilterText>
-              {selectedDate.toLocaleDateString('pt-BR')}
-            </FilterText>
-          </FilterButton>
           
-          <View style={{ height: 180, marginBottom: 10 }}>
+          <View style={{ height: 150, marginTop: 0 }}>
             <FlatList
               data={carouselData}
               horizontal
@@ -237,8 +237,12 @@ export default function Home() {
           </View>
           
           <SectionTitle>
-            <SectionIcon name="list" size={24} color="#000000" />
-            <SectionText>Últimas Movimentações</SectionText>
+            <FilterButton onPress={() => setShowDatePicker(true)}>
+              <Icon name="calendar" size={20} color="#000" />
+              <FilterText>
+                <SectionText>Últimas Movimentações</SectionText>
+              </FilterText>
+            </FilterButton>
           </SectionTitle>
           
           {movements.length === 0 ? (
